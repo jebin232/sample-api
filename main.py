@@ -3,27 +3,27 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-# Define a Pydantic model to handle incoming messages
+# Store conversation history
+conversation_history = []
+
 class Message(BaseModel):
     text: str
 
-# Create a list of predefined responses
-responses = [
-    "Hello! How can I assist you?",
-    "I'm here to help. What can I do for you?",
-    "Please ask me a question, and I'll do my best to answer.",
-]
-
-# Define the endpoint for handling user messages
-@app.post("/chat")
-async def chat(message: Message):
+@app.post("/send_message/")
+async def send_message(message: Message):
     user_message = message.text
-    # You can add more advanced logic here to generate responses.
-    # For now, we'll just rotate through the predefined responses.
-    response = responses[len(responses) % len(responses)]
-    return {"response": response}
+    conversation_history.append({"role": "user", "content": user_message})
+
+    # You can add logic here to generate a response based on user_message
+    response_message = "Hello! How can I assist you today?"
+    conversation_history.append({"role": "assistant", "content": response_message})
+
+    return {"message": response_message}
+
+@app.get("/get_history/")
+async def get_conversation_history():
+    return conversation_history
 
 if __name__ == "__main__":
     import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
