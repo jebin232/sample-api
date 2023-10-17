@@ -1,4 +1,7 @@
-fastapi==0.68.0
+fastapi==0.68.1
+httpx==0.20.0
+pydantic==1.8.3
+starlette==0.15.0
 uvicorn==0.15.0
-pydantic==1.8.2
-
+rembg==1.0.3
+Pillow==8.3.1
