@@ -1,28 +1,32 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi import FastAPI, UploadFile, File
+from fastapi.responses import FileResponse
+from rembg import remove
+from PIL import Image
+from io import BytesIO
 
 app = FastAPI()
 
-# Store conversation history
-conversation_history = []
+@app.post("/remove_background/")
+async def remove_background(file: UploadFile):
+    # Check if the uploaded file is an image
+    if file.content_type.startswith('image'):
+        # Read the uploaded image
+        image_bytes = await file.read()
 
-class Message(BaseModel):
-    text: str
+        # Use rembg to remove the background
+        output_bytes = remove(image_bytes)
 
-@app.post("/send_message/")
-async def send_message(message: Message):
-    user_message = message.text
-    conversation_history.append({"role": "user", "content": user_message})
+        # Open the processed image with Pillow
+        image = Image.open(BytesIO(output_bytes))
 
-    # You can add logic here to generate a response based on user_message
-    response_message = "Hello! How can I assist you today?"
-    conversation_history.append({"role": "assistant", "content": response_message})
+        # Save the processed image to a temporary file
+        output_path = "output.png"
+        image.save(output_path, "PNG")
 
-    return {"message": response_message}
+        # Return the processed image
+        return FileResponse(output_path, media_type="image/png")
 
-@app.get("/get_history/")
-async def get_conversation_history():
-    return conversation_history
+    return {"error": "Uploaded file is not an image."}
 
 if __name__ == "__main__":
     import uvicorn
